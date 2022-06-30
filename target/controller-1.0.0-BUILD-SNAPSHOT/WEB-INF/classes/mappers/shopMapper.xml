@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.mappers.shopMapper">
+
+	<select id="list" resultType="com.shop.domain.GoodsViewVO">
+		SELECT g.gdsNum, g.gdsName, g.cateCode, c.cateCodeRef, c.cateName, gdsPrice, gdsStock, gdsDes, gdsImg, gdsDate, g.gdsImg, g.gdsThumbImg
+		FROM tbl_goods g INNER JOIN goods_category c on g.cateCode = c.cateCode           
+		WHERE g.cateCode = #{cateCode}
+	</select>
+
+	<!-- 카테고리별 상품 리스트 : 1차 분류 -->
+	<select id="list_1" resultType="com.shop.domain.GoodsViewVO">
+		SELECT g.gdsNum, g.gdsName, g.cateCode, c.cateCodeRef, c.cateName, gdsPrice, gdsStock, gdsDes, gdsDate, g.gdsImg, g.gdsThumbImg
+		FROM tbl_goods g INNER JOIN goods_category c ON g.cateCode = c.cateCode
+		WHERE g.cateCode = #{cateCode} OR c.cateCodeRef = #{cateCodeRef}
+	</select>
+	
+	<!-- 카테고리별 상품 리스트 : 2차 분류 -->
+	<select id="list_2" resultType="com.shop.domain.GoodsViewVO">
+		SELECT g.gdsNum, g.gdsName, g.cateCode, c.cateCodeRef, c.cateName, gdsPrice, gdsStock, gdsDes, gdsDate, g.gdsImg, g.gdsThumbImg
+		FROM tbl_goods g INNER JOIN goods_category c ON g.cateCode = c.cateCode
+		WHERE g.cateCode = #{cateCode}
+	</select>
+		
+	<!-- 상품 조회 + 카테고리 조인-->
+	<select id="goodsView" resultType="com.shop.domain.GoodsViewVO">
+		SELECT g.gdsNum, g.gdsName, g.cateCode, c.cateCodeRef, c.cateName, gdsPrice, gdsStock, gdsDes, gdsImg, gdsDate, g.gdsImg, g.gdsThumbImg
+		FROM TBL_GOODS g INNER JOIN goods_category c ON g.cateCode = c.cateCode          
+		WHERE g.gdsNum = #{gdsNum}
+	</select>	
+	
+	<!-- 상품 소감(댓글) 작성 -->
+	<insert id="registReply">
+		INSERT INTO tbl_reply (gdsNum, userId, repNum, repCon)
+		VALUES (#{gdsNum}, #{userId}, tbl_reply_seq.nextval, #{repCon})
+	</insert>
+
+	<!-- 상품 소감(댓글) 리스트 -->
+	<select id="replyList" resultType="com.shop.domain.ReplyListVO">
+		SELECT r.gdsNum, r.userId, r.repNum, r.repCon, r.repDate, m.userName
+		FROM tbl_reply r INNER JOIN tbl_member m ON r.userId = m.userId
+		WHERE gdsNum = #{gdsNum}
+	</select>	
+</mapper>

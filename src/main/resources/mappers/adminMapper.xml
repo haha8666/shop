@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.mappers.adminMapper">
+	
+	<!-- 관리자 화면 카테고리 조회 -->
+	<select id="category" resultType="com.shop.domain.CategoryVO">
+		SELECT LEVEL, cateName, cateCode, cateCodeRef 
+			FROM GOODS_CATEGORY
+			START WITH cateCodeRef IS NULL
+			CONNECT BY PRIOR cateCode = cateCodeRef
+	</select>
+	
+	<!-- 상품 등록 -->
+	<insert id="register">
+		INSERT INTO TBL_GOODS (gdsNum, gdsName, cateCode, gdsPrice, gdsStock, gdsDes, gdsImg, gdsThumbImg)
+			VALUES (tbl_goods_seqs.nextval, #{gdsName}, #{cateCode}, #{gdsPrice}, #{gdsStock}, #{gdsDes}, #{gdsImg}, #{gdsThumbImg})
+	</insert>
+	
+	<!-- 상품 목록 조회 -->
+<!-- 	
+	<select id="goodslist" resultType="com.shop.domain.GoodsVO">
+		SELECT gdsNum, gdsName, cateCode, gdsPrice, gdsStock, gdsDes, gdsImg, gdsDate
+		FROM TBL_GOODS 
+		ORDER BY gdsNum DESC
+	</select>
+ -->
+<select id="goodslist" resultType="com.shop.domain.GoodsViewVO">
+	SELECT g.gdsNum, g.gdsName, g.cateCode, c.cateCodeRef, c.cateName, gdsPrice, gdsStock, gdsDes, gdsImg, gdsDate, g.gdsImg, g.gdsThumbImg
+	FROM tbl_goods g INNER JOIN goods_category c
+	ON g.cateCode = c.cateCode
+</select>
+ 
+	<!-- 상품 조회 -->
+<!-- 
+	<select id="goodsView" resultType="com.shop.domain.GoodsVO">
+		SELECT gdsNum, gdsName, cateCode, gdsPrice, gdsStock, gdsDes, gdsImg, gdsDate
+		FROM TBL_GOODS
+		WHERE gdsNum = #{gdsNum}
+	</select>
+ -->		
+	<!-- 상품 조회 + 카테고리 조인-->
+	<select id="goodsView" resultType="com.shop.domain.GoodsViewVO">
+		SELECT g.gdsNum, g.gdsName, g.cateCode, c.cateCodeRef, c.cateName, gdsPrice, gdsStock, gdsDes, gdsImg, gdsDate, g.gdsImg, g.gdsThumbImg
+		FROM TBL_GOODS g INNER JOIN goods_category c
+			ON g.cateCode = c.cateCode          
+		WHERE g.gdsNum = #{gdsNum}
+	</select>
+
+	<!-- 상품 수정 -->
+	<update id="goodsModify">
+		UPDATE TBL_GOODS
+		SET gdsName = #{gdsName},
+			cateCode = #{cateCode},
+			gdsPrice = #{gdsPrice},
+			gdsStock = #{gdsStock},
+			gdsDes = #{gdsDes},
+			gdsImg = #{gdsImg},
+			gdsThumbImg = #{gdsThumbImg}
+		WHERE gdsNum = #{gdsNum}
+	</update>	
+	
+	<!-- 상품 삭제 -->
+	<delete id="goodsDelete">
+		DELETE FROM TBL_GOODS
+	 	WHERE gdsNum = #{gdsNum}
+	</delete>
+
+	<!-- 모든 유저의 주문 목록 -->
+	<select id="orderList" resultType="com.shop.domain.OrderVO">
+		SELECT orderId, userId, orderRec, userAddr1, userAddr2, userAddr3, orderPhon, amount, orderDate, delivery
+		FROM tbl_order
+	</select>
+	
+	<!-- 특정 주문 목록 -->
+	<select id="orderView" resultType="com.shop.domain.OrderListVO">
+		SELECT 
+			o.orderId, o.userId, o.orderRec, o.userAddr1, o.userAddr2, o.userAddr3, o.orderPhon, o.amount, o.orderDate, o.delivery, 
+			d.orderDetailsNum, d.gdsNum, d.cartStock, g.gdsName, g.gdsThumbImg, g.gdsPrice
+		FROM tbl_order o
+		INNER JOIN tbl_order_details d ON o.orderId = d.orderId
+		INNER JOIN tbl_goods g ON d.gdsNum = g.gdsNum
+		WHERE o.orderId = #{orderId}
+	</select>
+	
+	<!-- 배송 상태 -->
+	<update id="delivery">
+		UPDATE TBL_ORDER
+		SET delivery = #{delivery}
+		WHERE orderId = #{orderId}
+	</update>
+	
+	<!-- 상품 수량 조절 -->
+	<update id="changeStock">
+		UPDATE TBL_GOODS
+		SET gdsStock = gdsStock - #{gdsStock}
+		WHERE gdsNum = #{gdsNum}
+	</update>
+	
+	<!-- 모든 댓글 -->
+	<select id="allReply" resultType="com.shop.domain.ReplyListVO">
+		SELECT r.gdsNum, r.userId, r.repNum, r.repCon, r.repDate, m.userName
+		FROM TBL_REPLY r INNER JOIN TBL_MEMBER m ON r.userId = m.userId
+	</select>
+	
+	<!-- 댓글 지우기 -->
+	<delete id="deleteReply">
+		DELETE TBL_REPLY
+		WHERE repNum = #{repNum}
+	</delete>
+	
+	<!-- 유저 목록 -->
+	<select id="userList" resultType="com.shop.domain.MemberVO">
+		SELECT userName, userId, userPhon, userAddr1, userAddr2, userAddr3, regiDate 
+		FROM TBL_MEMBER 
+		WHERE VERIFY = 0
+	</select>
+	
+</mapper>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.mappers.adminMapper">
+	
+	<!-- 관리자 화면 카테고리 조회 -->
+	<select id="category" resultType="com.shop.domain.CategoryVO">
+		SELECT LEVEL, cateName, cateCode, cateCodeRef 
+			FROM GOODS_CATEGORY
+			START WITH cateCodeRef IS NULL
+			CONNECT BY PRIOR cateCode = cateCodeRef
+	</select>
+	
+	<!-- 상품 등록 -->
+	<insert id="register">
+		INSERT INTO TBL_GOODS (gdsNum, gdsName, cateCode, gdsPrice, gdsStock, gdsDes, gdsImg, gdsThumbImg)
+			VALUES (tbl_goods_seqs.nextval, #{gdsName}, #{cateCode}, #{gdsPrice}, #{gdsStock}, #{gdsDes}, #{gdsImg}, #{gdsThumbImg})
+	</insert>
+	
+	<!-- 상품 목록 조회 -->
+<!-- 	
+	<select id="goodslist" resultType="com.shop.domain.GoodsVO">
+		SELECT gdsNum, gdsName, cateCode, gdsPrice, gdsStock, gdsDes, gdsImg, gdsDate
+		FROM TBL_GOODS 
+		ORDER BY gdsNum DESC
+	</select>
+ -->
+<select id="goodslist" resultType="com.shop.domain.GoodsViewVO">
+	SELECT g.gdsNum, g.gdsName, g.cateCode, c.cateCodeRef, c.cateName, gdsPrice, gdsStock, gdsDes, gdsImg, gdsDate, g.gdsImg, g.gdsThumbImg
+	FROM tbl_goods g INNER JOIN goods_category c
+	ON g.cateCode = c.cateCode
+</select>
+ 
+	<!-- 상품 조회 -->
+<!-- 
+	<select id="goodsView" resultType="com.shop.domain.GoodsVO">
+		SELECT gdsNum, gdsName, cateCode, gdsPrice, gdsStock, gdsDes, gdsImg, gdsDate
+		FROM TBL_GOODS
+		WHERE gdsNum = #{gdsNum}
+	</select>
+ -->		
+	<!-- 상품 조회 + 카테고리 조인-->
+	<select id="goodsView" resultType="com.shop.domain.GoodsViewVO">
+		SELECT g.gdsNum, g.gdsName, g.cateCode, c.cateCodeRef, c.cateName, gdsPrice, gdsStock, gdsDes, gdsImg, gdsDate, g.gdsImg, g.gdsThumbImg
+		FROM TBL_GOODS g INNER JOIN goods_category c
+			ON g.cateCode = c.cateCode          
+		WHERE g.gdsNum = #{gdsNum}
+	</select>
+
+	<!-- 상품 수정 -->
+	<update id="goodsModify">
+		UPDATE TBL_GOODS
+		SET gdsName = #{gdsName},
+			cateCode = #{cateCode},
+			gdsPrice = #{gdsPrice},
+			gdsStock = #{gdsStock},
+			gdsDes = #{gdsDes},
+			gdsImg = #{gdsImg},
+			gdsThumbImg = #{gdsThumbImg}
+		WHERE gdsNum = #{gdsNum}
+	</update>	
+	
+	<!-- 상품 삭제 -->
+	<delete id="goodsDelete">
+		DELETE FROM TBL_GOODS
+	 	WHERE gdsNum = #{gdsNum}
+	</delete>
+
+</mapper>

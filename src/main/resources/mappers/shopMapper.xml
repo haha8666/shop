@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.mappers.shopMapper">
+
+	<select id="list" resultType="com.shop.domain.GoodsViewVO">
+		SELECT g.gdsNum, g.gdsName, g.cateCode, c.cateCodeRef, c.cateName, gdsPrice, gdsStock, gdsDes, gdsImg, gdsDate, g.gdsImg, g.gdsThumbImg
+		FROM tbl_goods g INNER JOIN goods_category c on g.cateCode = c.cateCode           
+		WHERE g.cateCode = #{cateCode}
+	</select>
+
+	<!-- 카테고리별 상품 리스트 : 1차 분류 -->
+	<select id="list_1" resultType="com.shop.domain.GoodsViewVO">
+		SELECT g.gdsNum, g.gdsName, g.cateCode, c.cateCodeRef, c.cateName, gdsPrice, gdsStock, gdsDes, gdsDate, g.gdsImg, g.gdsThumbImg
+		FROM tbl_goods g INNER JOIN goods_category c ON g.cateCode = c.cateCode
+		WHERE g.cateCode = #{cateCode} OR c.cateCodeRef = #{cateCodeRef}
+	</select>
+	
+	<!-- 카테고리별 상품 리스트 : 2차 분류 -->
+	<select id="list_2" resultType="com.shop.domain.GoodsViewVO">
+		SELECT g.gdsNum, g.gdsName, g.cateCode, c.cateCodeRef, c.cateName, gdsPrice, gdsStock, gdsDes, gdsDate, g.gdsImg, g.gdsThumbImg
+		FROM tbl_goods g INNER JOIN goods_category c ON g.cateCode = c.cateCode
+		WHERE g.cateCode = #{cateCode}
+	</select>
+		
+	<!-- 상품 조회 + 카테고리 조인-->
+	<select id="goodsView" resultType="com.shop.domain.GoodsViewVO">
+		SELECT g.gdsNum, g.gdsName, g.cateCode, c.cateCodeRef, c.cateName, gdsPrice, gdsStock, gdsDes, gdsImg, gdsDate, g.gdsImg, g.gdsThumbImg
+		FROM TBL_GOODS g INNER JOIN goods_category c ON g.cateCode = c.cateCode          
+		WHERE g.gdsNum = #{gdsNum}
+	</select>
+	
+	<!-- 상품 소감(댓글) 작성 -->
+	<insert id="registReply">
+		INSERT INTO tbl_reply (gdsNum, userId, repNum, repCon)
+		VALUES (#{gdsNum}, #{userId}, tbl_reply_seq.nextval, #{repCon})
+	</insert>
+
+	<!-- 상품 소감(댓글) 리스트 -->
+	<select id="replyList" resultType="com.shop.domain.ReplyListVO">
+		SELECT r.gdsNum, r.userId, r.repNum, r.repCon, r.repDate, m.userName
+		FROM tbl_reply r INNER JOIN tbl_member m ON r.userId = m.userId
+		WHERE gdsNum = #{gdsNum}
+	</select>
+
+	<!-- 상품 소감(댓글) 삭제 -->
+	<delete id="deleteReply">
+		DELETE tbl_reply
+		WHERE repNum = #{repNum}
+		  AND userId = #{userId}
+	</delete>
+
+	<!-- 아이디 체크 -->
+	<select id="replyUserIdCheck" resultType="String">
+		SELECT userId
+		FROM tbl_reply
+		WHERE repNum = #{repNum}
+	</select>
+	
+	<!-- 상품 소감(댓글) 수정 -->
+	<update id="modifyReply">
+		UPDATE TBL_REPLY
+		SET REPCON = #{repCon}
+		WHERE repNum = #{repNum}
+		  AND userId = #{userId}
+	</update>
+	
+	<!-- 상품 추가 -->
+	<insert id="addCart">
+		INSERT INTO tbl_cart (cartNum, userId, gdsNum, cartStock)
+		VALUES (tbl_cart_seq.nextval, #{userId}, #{gdsNum}, #{cartStock})
+	</insert>
+	
+	<!-- 카트 리스트 -->
+	<select id="cartList" resultType="com.shop.domain.CartListVO">
+		SELECT row_number() over(order by c.cartNum desc) as num, c.cartNum, c.userId, c.gdsNum, c.cartStock, c.addDate, g.gdsName, g.gdsPrice, g.gdsThumbImg
+		FROM tbl_cart c INNER JOIN tbl_goods g ON c.gdsNum = g.gdsNum
+		WHERE c.userId = #{userId}
+	</select>
+	
+	<!-- 카트 삭제 -->
+	<delete id="deleteCart">
+		DELETE FROM TBL_CART
+		WHERE cartNum = #{cartNum}
+		  AND userId = #{userId}
+	</delete>
+
+	<!-- 주문 정보 -->
+	<insert id="orderInfo">
+		INSERT INTO TBL_ORDER(orderId, userId, orderRec, userAddr1, userAddr2, userAddr3, orderPhon, amount)
+		VALUES(#{orderId}, #{userId}, #{orderRec}, #{userAddr1}, #{userAddr2}, #{userAddr3}, #{orderPhon}, #{amount})
+	</insert>
+
+	<!-- 주문 정보 상세 -->
+	<insert id="orderInfo_Details">
+		INSERT INTO TBL_ORDER_DETAILS(orderDetailsNum, orderId, gdsNum, cartStock) 
+			SELECT TBL_ORDER_DETAIL_SEQ.NEXTVAL, #{orderId}, gdsNum, cartStock FROM TBL_CART
+	</insert>
+	
+	<!-- 주문 이후 카트 초기화 -->
+	<delete id="cartAllDelete">
+		DELETE FROM TBL_CART
+		WHERE userId = #{userId}
+	</delete>
+	
+	<!-- 주문 목록 조회 -->
+	<select id="orderList" resultType="com.shop.domain.OrderVO">
+		SELECT orderId, userId, orderRec, userAddr1, userAddr2, userAddr3, orderPhon, amount, orderDate
+		FROM TBL_ORDER
+		WHERE userId = #{userId}
+	</select>
+
+	<!-- 주문 목록 -->
+	<select id="orderView" resultType="com.shop.domain.OrderListVO">
+		SELECT o.orderId, o.userId, o.orderRec, o.userAddr1, o.userAddr2, o.userAddr3, o.orderPhon, o.amount, o.orderDate, d.orderDetailsNum, d.gdsNum, d.cartStock, g.gdsName, g.gdsThumbImg, g.gdsPrice
+		FROM tbl_order o
+			INNER JOIN tbl_order_details d ON o.orderId = d.orderId
+			INNER JOIN tbl_goods g ON d.gdsNum = g.gdsNum
+		WHERE o.userId = #{userId}
+		  AND o.orderId = #{orderId}
+	</select>
+	
+	<!-- 상품 전체 조회 -->
+	<select id="allList" resultType="com.shop.domain.GoodsViewVO">
+		SELECT g.gdsNum, g.gdsName, g.cateCode, c.cateCodeRef, c.cateName, gdsPrice, gdsStock, gdsDes, gdsImg, gdsDate, g.gdsImg, g.gdsThumbImg
+		FROM tbl_goods g INNER JOIN goods_category c on g.cateCode = c.cateCode
+	</select>
+</mapper>
