@@ -14,9 +14,9 @@
 	<!-- 오라클 접속 -->
 	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
 		<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>
-		<property name="url" value="jdbc:oracle:thin:@128.1.1.6:1521:JEDODB"/>
-		<property name="username" value="MINUSER"/>
-		<property name="password" value="minuser"/>
+		<property name="url" value="jdbc:oracle:thin:@localhost:XE"/>
+		<property name="username" value="username"/>
+		<property name="password" value="password"/>
 	</bean>
 	<!-- 마이바티스 연동 -->
 	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
